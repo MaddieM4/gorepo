@@ -58,8 +58,9 @@ clone(){
 add() {
 	# Stage a file or set of files.
 	for file in $@; do
+		echo "Adding: $file"
 		case "$type" in
-			git) git add -u $file;;
+			git) git add -A $file;;
 		esac
 	done
 }
@@ -80,6 +81,13 @@ commit() {
 	esac
 }
 
+push() {
+	# Push changes to somewhere
+	case "$type" in
+		git) git push $1;;
+	esac
+}
+
 shift 1
 case "$action" in
 	status) status;;
@@ -87,8 +95,8 @@ case "$action" in
 	up) ;;
 	down) ;;
 	remote) ;;
-	push) ;;
-	pull) ;;
+	push) push $1;;
+	pull) pull $1;;
 	add) add $@;;
 	rm) remove $@;;
 	commit) commit $1;;
