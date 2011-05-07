@@ -1,0 +1,99 @@
+#!/bin/sh
+
+dir=`pwd`
+verbose=0
+usage="usage: gorepo [-d directory] [-v] action [other options]"
+
+# Parse command line
+while getopts "vd:" optionName; do
+	case "$optionName" in
+		v) verbose=1;;
+		d) dir="$OPTARG";;
+		[?]) echo $usage >&2; exit 1;
+	esac
+done
+shift $(($OPTIND-1))
+
+cd $dir
+dir=`pwd`
+action="$1"
+
+# Detect repo type
+if [ -d $dir/.git ]; then
+	type="git"
+else
+	echo "gorepo: could not detect repository in this folder" >&2
+	if [ $action != "clone" ]; then
+		exit 1
+	fi
+fi
+
+if [ $verbose = "1" ]; then
+	echo gorepo: detected $type repo
+fi
+
+addrtype(){
+	# Figure out the type of repo pointed to by a link (for cloning)
+	if [ "`echo $1 | grep -c \.git/*$`" = "1" ]; then
+		type="git"
+	fi
+}
+
+status(){
+	# Current status of repository
+	# TODO: Awk this into a more standard format for scripting.
+	case "$type" in
+		git) git status;;
+	esac
+}
+
+clone(){
+	# Clone a remote repository.
+	echo "Cloning $1 with type $type"
+	case "$type" in
+		git) git clone $1 $2;;
+	esac
+}
+
+add() {
+	# Stage a file or set of files.
+	for file in $@; do
+		case "$type" in
+			git) git add -u $file;;
+		esac
+	done
+}
+
+remove() {
+	# Unstage a file or set of files.
+	for file in $@; do
+		case "$type" in
+			git) git reset $file;;
+		esac
+	done
+}
+
+commit() {
+	# Create a commit based on current staging
+	case "$type" in
+		git) git commit -m "$1"
+	esac
+}
+
+shift 1
+case "$action" in
+	status) status;;
+	clone) addrtype $1; clone $1 $2;;
+	up) ;;
+	down) ;;
+	remote) ;;
+	push) ;;
+	pull) ;;
+	add) add $@;;
+	rm) remove $@;;
+	commit) commit $1;;
+	branch) ;;
+	rewind) ;;
+
+	*) echo $usage>&2;echo "gorepo: invalid action: $action" >&2; exit 1;;
+esac
