@@ -88,6 +88,13 @@ push() {
 	esac
 }
 
+pull() {
+	# Pull changes from somewhere
+	case "$type" in
+		git) git pull $1;;
+	esac
+}
+
 shift 1
 case "$action" in
 	status) status;;
@@ -99,7 +106,7 @@ case "$action" in
 	pull) pull $1;;
 	add) add $@;;
 	rm) remove $@;;
-	commit) commit $1;;
+	commit) commit "$1";;
 	branch) ;;
 	rewind) ;;
 
